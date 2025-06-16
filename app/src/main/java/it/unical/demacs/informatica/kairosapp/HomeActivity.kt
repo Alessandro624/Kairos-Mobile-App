@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material3.*
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,6 +36,7 @@ import it.unical.demacs.informatica.kairosapp.viewmodels.HomeViewModel
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,6 +49,9 @@ fun HomeActivity(
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -85,6 +90,7 @@ fun HomeActivity(
         }
     ) { innerPadding ->
         LazyColumn(
+            state = lazyListState,
             modifier = modifier
                 .padding(innerPadding)
                 .fillMaxSize()
@@ -102,7 +108,8 @@ fun HomeActivity(
                     Text(
                         text = stringResource(R.string.welcome_message),
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
@@ -113,7 +120,11 @@ fun HomeActivity(
                     )
                     Spacer(Modifier.height(24.dp))
                     Button(
-                        onClick = { /* TODO: scroll down to Events */ },
+                        onClick = {
+                            coroutineScope.launch {
+                                lazyListState.animateScrollToItem(index = 1)
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text(stringResource(R.string.explore_events))
@@ -124,32 +135,65 @@ fun HomeActivity(
 
             item {
                 if (uiState.isLoading) {
-                    LinearProgressIndicator(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                    )
-                    Text(
-                        text = stringResource(R.string.events_loading),
-                        modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                uiState.errorMessage?.let { message ->
-                    Text(
-                        text = message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(top = 8.dp, start = 16.dp, end = 16.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Button(
-                        onClick = { viewModel.fetchEventsFromNetwork() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text(stringResource(R.string.retry))
+                        LinearProgressIndicator(
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            text = stringResource(R.string.events_loading),
+                            modifier = Modifier.padding(top = 8.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                } else if (uiState.errorMessage != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = uiState.errorMessage!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = { viewModel.fetchEventsFromNetwork() },
+                            modifier = Modifier.fillMaxWidth(0.6f)
+                        ) {
+                            Text(stringResource(R.string.retry))
+                        }
+                    }
+                } else if (uiState.events.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_events_available),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Button(
+                            onClick = { viewModel.fetchEventsFromNetwork() },
+                            modifier = Modifier.fillMaxWidth(0.6f)
+                        ) {
+                            Text(stringResource(R.string.refresh))
+                        }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -167,9 +211,9 @@ fun HomeActivity(
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(uiState.events.sortedBy { it.dateTime }.take(5)) { event ->
+                        items(uiState.events.sortedBy { it.dateTime }.take(10)) { event ->
                             EventCard(event = event) {
-                                Log.d("HomeActivity", "Event title: ${event.title}")
+                                Log.d("HomeActivity", "Clicked on upcoming event: ${event.title}")
                             }
                         }
                     }
@@ -195,29 +239,15 @@ fun HomeActivity(
                             ) {
                                 items(eventsInCategory) { event ->
                                     EventCard(event = event) {
-                                        Log.d("HomeActivity", "Event title: ${event.title}")
+                                        Log.d(
+                                            "HomeActivity",
+                                            "Clicked on categorized event: ${event.title}"
+                                        )
                                     }
                                 }
                             }
                             Spacer(Modifier.height(24.dp))
                         }
-                    }
-                }
-            } else if (!uiState.isLoading && uiState.errorMessage == null) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_events_available),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
                     }
                 }
             }
@@ -246,21 +276,17 @@ fun EventCard(event: EventDTO, onDetailsClick: () -> Unit) {
                     .background(MaterialTheme.colorScheme.surfaceVariant)
             ) {
                 val imageUrl = event.images?.firstOrNull()
-                if (imageUrl != null && imageUrl.isNotBlank()) {
-                    Image(
-                        painter = rememberAsyncImagePainter(model = imageUrl),
-                        contentDescription = "${stringResource(R.string.event_image_description)}: ${event.title}",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.placeholder_event_image),
-                        contentDescription = stringResource(R.string.no_image_available),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+
+                Image(
+                    painter = rememberAsyncImagePainter(
+                        model = imageUrl,
+                        error = painterResource(id = R.drawable.ic_image_placeholder),
+                        placeholder = painterResource(id = R.drawable.ic_image_placeholder)
+                    ),
+                    contentDescription = "${stringResource(R.string.event_image_description)}: ${event.title}",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
 
                 val firstSectorPrice = event.sectors.firstOrNull()?.price
                 val priceText = if (firstSectorPrice != null && firstSectorPrice > 0) {
@@ -282,7 +308,12 @@ fun EventCard(event: EventDTO, onDetailsClick: () -> Unit) {
 
                 AssistChip(
                     onClick = { },
-                    label = { Text(priceText) },
+                    label = {
+                        Text(
+                            priceText,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(8.dp),
@@ -372,6 +403,28 @@ fun EventCardPreview() {
                 structureId = "201",
                 sectors = listOf(SectorDTO(name = "Parterre", price = 25.0f)),
                 images = listOf("https://picsum.photos/seed/picsum/200/300")
+            ),
+            onDetailsClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EventCardFreePreview() {
+    KairosAppTheme {
+        EventCard(
+            event = EventDTO(
+                id = "2",
+                title = "Mostra d'Arte Moderna",
+                description = "Esplora le ultime tendenze dell'arte contemporanea in questa mostra imperdibile.",
+                category = "Arte",
+                dateTime = OffsetDateTime.now().plusMonths(1).toString(),
+                maxParticipants = 100,
+                organizerId = "102",
+                structureId = "202",
+                sectors = listOf(SectorDTO(name = "Ingresso Libero", price = 0.0f)),
+                images = listOf("https://picsum.photos/seed/art/200/300")
             ),
             onDetailsClick = {}
         )

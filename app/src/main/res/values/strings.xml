@@ -24,4 +24,5 @@
     <string name="login">Accedi</string>
     <string name="na">N/D</string>
     <string name="no_events_available">Nessun evento disponibile</string>
+    <string name="refresh">Aggiorna</string>
 </resources>
