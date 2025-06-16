@@ -24,4 +24,5 @@ dependencies {
     implementation(libs.moshi.adapters)
     implementation(libs.okhttp)
     implementation(libs.androidx.annotation.jvm)
+    implementation(libs.androidx.room.common.jvm)
 }
