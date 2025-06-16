@@ -25,4 +25,7 @@
     <string name="na">N/D</string>
     <string name="no_events_available">Nessun evento disponibile</string>
     <string name="refresh">Aggiorna</string>
+    <string name="back">Torna indietro</string>
+    <string name="event_details">Dettagli Evento</string>
+    <string name="settings">Impostazioni</string>
 </resources>
