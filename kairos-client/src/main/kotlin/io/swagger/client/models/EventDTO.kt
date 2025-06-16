@@ -31,15 +31,15 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "events")
 data class EventDTO(
 
-    @PrimaryKey val id: kotlin.Any? = null,
-    val title: kotlin.Any,
-    val description: kotlin.Any,
-    val category: kotlin.Any,
-    val dateTime: kotlin.Any,
-    val maxParticipants: kotlin.Any,
-    val organizerId: kotlin.Any,
-    val structureId: kotlin.Any,
-    val sectors: kotlin.Any,
-    val images: kotlin.Any? = null
+    @PrimaryKey val id: kotlin.String,
+    val title: kotlin.String,
+    val description: kotlin.String,
+    val category: kotlin.String,
+    val dateTime: kotlin.String,
+    val maxParticipants: kotlin.Int,
+    val organizerId: kotlin.String,
+    val structureId: kotlin.String,
+    val sectors: List<SectorDTO>,
+    val images: List<String>? = null
 ) {
 }

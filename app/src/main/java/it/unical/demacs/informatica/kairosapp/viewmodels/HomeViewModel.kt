@@ -8,6 +8,7 @@ import io.swagger.client.apis.EventControllerApi
 import io.swagger.client.models.EventDTO
 import io.swagger.client.models.PageEventDTO
 import io.swagger.client.models.Pageable
+import io.swagger.client.models.SectorDTO
 import it.unical.demacs.informatica.kairosapp.R
 import it.unical.demacs.informatica.kairosapp.model.AppDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -112,21 +113,34 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             val randomCategory = categories.random()
             val randomImage = sampleImages.random()
 
-            val sampleSectors = listOf("A", "B").take(Random.nextInt(0, 3))
+            val sampleSectors = if (Random.nextBoolean()) {
+                listOfNotNull(
+                    SectorDTO(
+                        name = "Standard",
+                        price = Random.nextFloat() * 30 + 5
+                    ),
+                    SectorDTO(
+                        name = "VIP",
+                        price = Random.nextFloat() * 50 + 40
+                    ).takeIf { Random.nextBoolean() }
+                )
+            } else {
+                emptyList()
+            }
 
             sampleList.add(
                 EventDTO(
-                    id = Random.nextLong(1000, 9999),
+                    id = Random.nextLong(1000, 9999).toString(),
                     title = "$randomTitle - ${
                         OffsetDateTime.now().plusDays(i.toLong()).dayOfMonth
                     }",
                     description = randomDescription,
                     category = randomCategory,
                     dateTime = OffsetDateTime.now().plusDays(i.toLong())
-                        .plusHours(Random.nextLong(9, 20)),
+                        .plusHours(Random.nextLong(9, 20)).toString(),
                     maxParticipants = Random.nextInt(10, 100),
-                    organizerId = Random.nextLong(1, 5),
-                    structureId = Random.nextLong(1, 5),
+                    organizerId = Random.nextLong(1, 5).toString(),
+                    structureId = Random.nextLong(1, 5).toString(),
                     sectors = sampleSectors,
                     images = listOf(randomImage)
                 )

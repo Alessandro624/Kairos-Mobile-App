@@ -1,8 +1,25 @@
 <resources>
     <string name="app_name">KairosApp</string>
+    <string name="welcome_message">Benvenuto su Kairos</string>
+    <string name="title">Kairos</string>
     <string name="error_network_generic">Errore di rete. Visualizzazione dati offline.
     </string>
     <string name="message_empty_network_response_showing_samples">Nessun evento trovato online.
         Vengono mostrati eventi di esempio.
     </string>
+    <string name="site_description">La tua piattaforma per scoprire e partecipare ad eventi unici</string>
+    <string name="explore_events">Esplora Eventi</string>
+    <string name="events_loading">Caricamento eventi...</string>
+    <string name="retry">Riprova</string>
+    <string name="upcoming_events">Eventi disponibili</string>
+    <string name="kairos_logo">Logo Kairos</string>
+    <string name="admin_panel">Admin Panel</string>
+    <string name="user_profile">Profilo Utente</string>
+    <string name="free">Gratuito</string>
+    <string name="date">Data</string>
+    <string name="max_participants">Numero di partecipanti</string>
+    <string name="details">Dettagli</string>
+    <string name="event_image_description">Immagine dell\'evento</string>
+    <string name="no_image_available">Nessuna immagine disponibile</string>
+    <string name="login">Accedi</string>
 </resources>
