@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">KairosApp</string>
+    <string name="error_network_generic">Errore di rete. Visualizzazione dati offline.
+    </string>
+    <string name="message_empty_network_response_showing_samples">Nessun evento trovato online.
+        Vengono mostrati eventi di esempio.
+    </string>
 </resources>
