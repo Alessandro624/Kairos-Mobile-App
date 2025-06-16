@@ -11,14 +11,15 @@ import io.swagger.client.models.Pageable
 import io.swagger.client.models.SectorDTO
 import it.unical.demacs.informatica.kairosapp.R
 import it.unical.demacs.informatica.kairosapp.model.AppDatabase
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.OffsetDateTime
 import kotlin.random.Random
-import java.time.format.DateTimeFormatter
 
 data class HomeUiState(
     val isLoading: Boolean = false,
@@ -53,7 +54,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
                 val pageableRequest = Pageable()
-                val fetchedPage: PageEventDTO = _eventApi.getAllEvents(pageable = pageableRequest)
+                val fetchedPage: PageEventDTO =
+                    withContext(Dispatchers.IO) { _eventApi.getAllEvents(pageable = pageableRequest) }
 
                 val fetchedEvents: List<EventDTO> = (fetchedPage.content as? List<*>)
                     ?.filterIsInstance<EventDTO>()

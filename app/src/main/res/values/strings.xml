@@ -28,4 +28,16 @@
     <string name="back">Torna indietro</string>
     <string name="event_details">Dettagli Evento</string>
     <string name="settings">Impostazioni</string>
+    <string name="error_empty_fields">I campi non possono essere vuoti</string>
+    <string name="error_invalid_credentials">Credenziali errate. Riprova</string>
+    <string name="login_success">Accesso avvenuto con successo</string>
+    <string name="login_welcome">Accedi al tuo account</string>
+    <string name="usernameOrEmail">Username o Email</string>
+    <string name="password">Password</string>
+    <string name="hide_password">Nascondi password</string>
+    <string name="show_password">Mostra password</string>
+    <string name="forgot_password">Password dimentcata?</string>
+    <string name="no_account_yet">Non hai un account?</string>
+    <string name="register_now">Registrati ora</string>
+    <string name="error_login_generic">Errore nell\'accesso. Riprova più tardi</string>
 </resources>
