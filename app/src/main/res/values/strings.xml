@@ -22,4 +22,6 @@
     <string name="event_image_description">Immagine dell\'evento</string>
     <string name="no_image_available">Nessuna immagine disponibile</string>
     <string name="login">Accedi</string>
+    <string name="na">N/D</string>
+    <string name="no_events_available">Nessun evento disponibile</string>
 </resources>
