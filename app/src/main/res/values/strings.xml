@@ -55,4 +55,36 @@
     <string name="login_with_google">Accedi con Google</string>
     <string name="login_with_keycloak">Accedi con Keycloak</string>
     <string name="error_no_browser_found">Browser non trovato</string>
+    <string name="error_empty_first_name">Il nome non può essere vuoto</string>
+    <string name="error_empty_last_name">Il cognome non può essere vuoto</string>
+    <string name="error_invalid_first_name">Il nome deve avere almeno 2 e massimo 50 caratteri</string>
+    <string name="error_invalid_last_name">Il cognome deve avere almeno 2 e massimo 50 caratteri</string>
+    <string name="error_empty_username">Lo username non può essere vuoto</string>
+    <string name="username_length_error">Lo username deve essere compreso tra</string>
+    <string name="username_allowed_chars_error">Lo username può solo contenere lettere, numeri, \'.\', \'_\', e \'-\'.</string>
+    <string name="error_empty_email">L\'email non può essere vuota</string>
+    <string name="error_invalid_email">Email non valida</string>
+    <string name="error_empty_password">La password non può essere vuota</string>
+    <string name="error_password_min_length">Caratteri minimi per la password:</string>
+    <string name="error_password_max_length">Caratteri massimi per la password:</string>
+    <string name="error_password_uppercase">Almeno un carattere maiuscolo</string>
+    <string name="error_password_lowercase">Almeno un carattere minuscolo</string>
+    <string name="error_password_digit">Almeno un numero</string>
+    <string name="error_password_special_char"><![CDATA[Almeno un catattere speciale tra @#$%^&+=!*()-_]]></string>
+    <string name="error_empty_confirm_password">La password di conferma non può essere vuota</string>
+    <string name="error_passwords_do_not_match">Le password non combaciano</string>
+    <string name="error_registration">Impossibile registrare l\'account. Riprova</string>
+    <string name="error_registration_api_failure">Errore nella registrazione. Riprova più tardi</string>
+    <string name="registration_success">Registrazione avvenuta con successo</string>
+    <string name="registration_welcome">Inziamo con le tue informazioni personali</string>
+    <string name="first_name">Nome</string>
+    <string name="last_name">Cognome</string>
+    <string name="username">Username</string>
+    <string name="email">Email</string>
+    <string name="confirm_password">Conferma Password</string>
+    <string name="register">Registrati</string>
+    <string name="already_have_account">Hai già un account?</string>
+    <string name="error_please_fill_all_fields_correctly">Compila tutti i campi correttamente</string>
+    <string name="next_step">Avanti</string>
+    <string name="registration_step_account_info">Quasi fatto! Scegli le tue credenziali</string>
 </resources>
