@@ -51,4 +51,8 @@
     <string name="send_reset_link">Invia istruzioni</string>
     <string name="back_to_login">Accedi ora</string>
     <string name="remember_password">Ricordi la password?</string>
+    <string name="or_login_with">Oppure accedi con</string>
+    <string name="login_with_google">Accedi con Google</string>
+    <string name="login_with_keycloak">Accedi con Keycloak</string>
+    <string name="error_no_browser_found">Browser non trovato</string>
 </resources>

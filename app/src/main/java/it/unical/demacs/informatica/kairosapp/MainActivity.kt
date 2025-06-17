@@ -1,5 +1,7 @@
 package it.unical.demacs.informatica.kairosapp
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -25,6 +27,10 @@ import androidx.navigation.compose.rememberNavController
 import it.unical.demacs.informatica.kairosapp.security.AuthManager
 import it.unical.demacs.informatica.kairosapp.security.TokenRefreshWorker
 import it.unical.demacs.informatica.kairosapp.ui.theme.KairosAppTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
 object Routes {
     const val HOME = "home"
@@ -37,11 +43,14 @@ object Routes {
 
 class MainActivity : ComponentActivity() {
     private lateinit var _authManager: AuthManager
+    private val _navigationEvent = MutableStateFlow<String?>(null)
+    val navigationEvent: StateFlow<String?> = _navigationEvent.asStateFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         _authManager = AuthManager.getInstance(this)
+        handleIntent(intent)
 
         setContent {
             KairosAppTheme {
@@ -61,11 +70,50 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                LaunchedEffect(navigationEvent) {
+                    navigationEvent.collect { route ->
+                        route?.let {
+                            Log.d("MainActivity", "Navigating to $it from deep link.")
+                            navController.navigate(it) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                            _navigationEvent.value = null
+                        }
+                    }
+                }
+
                 AppNavigationHost(
                     navController = navController,
                     authManager = _authManager,
                     modifier = Modifier.fillMaxSize()
                 )
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val appLinkData: Uri? = intent?.data
+        appLinkData?.let { uri ->
+            Log.d("MainActivity", "Deep link received: $uri")
+
+            val accessToken = uri.getQueryParameter("token")
+            val refreshToken = uri.getQueryParameter("refreshToken")
+
+            if (!accessToken.isNullOrBlank() && !refreshToken.isNullOrBlank()) {
+                _authManager.saveTokens(accessToken, refreshToken)
+                Log.d("MainActivity", "Tokens received via deep link and saved!")
+                _navigationEvent.update { Routes.HOME }
+            } else {
+                Log.w(
+                    "MainActivity",
+                    "Deep link did not contain valid login success data or tokens."
+                )
+                _navigationEvent.update { Routes.LOGIN }
             }
         }
     }

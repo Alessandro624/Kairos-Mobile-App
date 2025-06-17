@@ -22,6 +22,8 @@ import io.swagger.client.infrastructure.*
 
 class AuthenticationApi(basePath: kotlin.String = "http://10.0.2.2:8080") : ApiClient(basePath) {
 
+    private val redirectUri: kotlin.String = "kairosapp://auth/callback"
+
     /**
      * Request password reset
      * Initiates the password reset process by sending a reset link to the user&#x27;s email if the user exists.
@@ -217,5 +219,13 @@ class AuthenticationApi(basePath: kotlin.String = "http://10.0.2.2:8080") : ApiC
                 (response as ServerError<*>).message ?: "Server error"
             )
         }
+    }
+
+    fun loginWithGoogle(): String {
+        return "${baseUrl}/v1/auth/oauth2/authorize/google?redirect_uri=${redirectUri}"
+    }
+
+    fun loginWithKeycloak(): String {
+        return "${baseUrl}/v1/auth/oauth2/authorize/keycloak?redirect_uri=${redirectUri}"
     }
 }

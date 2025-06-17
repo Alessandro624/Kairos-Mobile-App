@@ -1,6 +1,9 @@
 package it.unical.demacs.informatica.kairosapp
 
+import android.annotation.SuppressLint
+import android.content.Intent
 import android.widget.Toast
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,8 +34,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -41,13 +46,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import it.unical.demacs.informatica.kairosapp.ui.theme.KairosAppTheme
 import it.unical.demacs.informatica.kairosapp.viewmodels.LoginViewModel
-import androidx.compose.runtime.getValue
 
+@SuppressLint("QueryPermissionsNeeded")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginActivity(
@@ -71,6 +78,25 @@ fun LoginActivity(
         if (uiState.errorMessage != null) {
             Toast.makeText(context, uiState.errorMessage, Toast.LENGTH_LONG).show()
             viewModel.resetLoginState()
+        }
+    }
+
+    LaunchedEffect(uiState.oauthUrlToOpen) {
+        uiState.oauthUrlToOpen?.let { url ->
+            try {
+                val customTabsIntent = CustomTabsIntent.Builder()
+                    .build()
+                customTabsIntent.launchUrl(context, url.toUri())
+            } catch (_: Exception) {
+                val browserIntent = Intent(Intent.ACTION_VIEW, url.toUri())
+                if (browserIntent.resolveActivity(context.packageManager) != null) {
+                    context.startActivity(browserIntent)
+                } else {
+                    Toast.makeText(context, R.string.error_no_browser_found, Toast.LENGTH_LONG)
+                        .show()
+                }
+            }
+            viewModel.consumeOauthUrl()
         }
     }
 
@@ -180,6 +206,65 @@ fun LoginActivity(
                 Text(stringResource(R.string.login))
             }
         }
+
+        Text(
+            text = stringResource(R.string.or_login_with),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(vertical = 8.dp)
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = viewModel::loginWithGoogle,
+                enabled = !uiState.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_google_logo),
+                        contentDescription = stringResource(R.string.login_with_google),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.login_with_google),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            Button(
+                onClick = viewModel::loginWithKeycloak,
+                enabled = !uiState.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_keycloak_logo),
+                        contentDescription = stringResource(R.string.login_with_keycloak),
+                        modifier = Modifier.size(24.dp),
+                        tint = Color.Unspecified
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.login_with_keycloak),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
 
         Row(

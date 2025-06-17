@@ -23,7 +23,8 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val loginSuccess: Boolean = false,
-    val isPasswordVisible: Boolean = false
+    val isPasswordVisible: Boolean = false,
+    val oauthUrlToOpen: String? = null
 )
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
@@ -32,6 +33,20 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _authApi = AuthenticationApi()
     private val _authManager = AuthManager.getInstance(application)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    fun loginWithGoogle() {
+        val url = _authApi.loginWithGoogle()
+        _uiState.update { it.copy(oauthUrlToOpen = url) }
+    }
+
+    fun loginWithKeycloak() {
+        val url = _authApi.loginWithKeycloak()
+        _uiState.update { it.copy(oauthUrlToOpen = url) }
+    }
+
+    fun consumeOauthUrl() {
+        _uiState.update { it.copy(oauthUrlToOpen = null) }
+    }
 
     fun updateUsernameOrEmail(usernameOrEmail: String) {
         _uiState.update { it.copy(usernameOrEmail = usernameOrEmail) }
