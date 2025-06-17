@@ -8,19 +8,28 @@ import it.unical.demacs.informatica.kairosapp.model.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 
-class AuthManager(context: Context) {
+class AuthManager private constructor(private val context: Context) {
 
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
 
-    private val _isLoggedIn = MutableStateFlow(isLoggedIn())
+    private val _isLoggedIn = MutableStateFlow(checkIsLoggedIn())
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    private val _isAdmin = MutableStateFlow(isAdmin())
+    private val _isAdmin = MutableStateFlow(checkIsAdmin())
     val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
 
     companion object {
+        @Volatile
+        private var instance: AuthManager? = null
+
+        fun getInstance(context: Context): AuthManager =
+            instance ?: synchronized(this) {
+                instance ?: AuthManager(context.applicationContext).also { instance = it }
+            }
+
         private const val ACCESS_TOKEN_KEY = "access_token"
         private const val REFRESH_TOKEN_KEY = "refresh_token"
         private const val TOKEN_EXPIRATION_TIME_KEY = "token_expiration_time_millis"
@@ -46,8 +55,8 @@ class AuthManager(context: Context) {
         Log.d("AuthManager", "Access Token expires: ${java.util.Date(expirationTimeMillis)}")
         Log.d("AuthManager", "User Role: ${userRole ?: "N/A"}")
 
-        _isLoggedIn.value = isLoggedIn()
-        _isAdmin.value = isAdmin()
+        _isLoggedIn.update { checkIsLoggedIn() }
+        _isAdmin.update { checkIsAdmin() }
     }
 
     fun getAccessToken(): String? {
@@ -86,26 +95,33 @@ class AuthManager(context: Context) {
         }
         Log.d("AuthManager", "Token cleared.")
 
-        _isLoggedIn.value = isLoggedIn()
-        _isAdmin.value = isAdmin()
+        _isLoggedIn.update { checkIsLoggedIn() }
+        _isAdmin.update { checkIsAdmin() }
     }
 
-    fun isLoggedIn(): Boolean {
+    private fun checkIsLoggedIn(): Boolean {
         val accessToken = getAccessToken()
-        val expirationTime = TokenUtils.getTokenExpirationTimeMillis(accessToken.toString())
-        val isTokenValid =
-            accessToken != null && expirationTime > System.currentTimeMillis()
+        val expirationTime = getTokenExpirationTimeMillis()
+        val isTokenValid = accessToken != null && expirationTime > System.currentTimeMillis()
         Log.d(
             "AuthManager",
-            "isLoggedIn: $isTokenValid (Token present: ${accessToken != null}, Expired: ${expirationTime <= System.currentTimeMillis()})"
+            "checkIsLoggedIn: $isTokenValid (Token present: ${accessToken != null}, Expired: ${expirationTime <= System.currentTimeMillis()})"
         )
         return isTokenValid
     }
 
-    fun isAdmin(): Boolean {
+    private fun checkIsAdmin(): Boolean {
         val userRole = getRole()
         val isAdminUser = userRole == UserRole.ADMIN.toString()
-        Log.d("AuthManager", "isAdmin: $isAdminUser (User role: ${userRole ?: "N/A"})")
+        Log.d("AuthManager", "checkIsAdmin: $isAdminUser (User role: ${userRole ?: "N/A"})")
         return isAdminUser
+    }
+
+    fun isLoggedIn(): Boolean {
+        return _isLoggedIn.value
+    }
+
+    fun isAdmin(): Boolean {
+        return _isAdmin.value
     }
 }
