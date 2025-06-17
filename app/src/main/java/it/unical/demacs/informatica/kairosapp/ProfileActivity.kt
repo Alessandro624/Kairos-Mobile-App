@@ -3,6 +3,6 @@ package it.unical.demacs.informatica.kairosapp
 import androidx.compose.runtime.Composable
 
 @Composable
-fun ProfileActivity(onNavigateBack: () -> Unit) {
+fun ProfileActivity() {
 
 }

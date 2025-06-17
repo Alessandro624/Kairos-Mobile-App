@@ -17,12 +17,16 @@ roomVersion = "2.7.1"
 navigationRuntimeKtx = "2.9.0"
 browser = "1.8.0"
 annotationJvm = "1.9.1"
+securityCrypto = "1.1.0-beta01"
 uiTextGoogleFonts = "1.8.2"
 roomCommonJvm = "2.7.1"
+workRuntimeKtx = "2.10.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomVersion" }
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

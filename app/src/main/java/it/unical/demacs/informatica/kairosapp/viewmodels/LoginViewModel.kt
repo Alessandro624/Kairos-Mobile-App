@@ -8,6 +8,7 @@ import io.swagger.client.apis.AuthenticationApi
 import io.swagger.client.models.AuthRequest
 import io.swagger.client.models.AuthResponse
 import it.unical.demacs.informatica.kairosapp.R
+import it.unical.demacs.informatica.kairosapp.security.AuthManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +30,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _application = application
     private val _uiState = MutableStateFlow(LoginUiState())
     private val _authApi = AuthenticationApi()
+    private val _authManager = AuthManager(application)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun updateUsernameOrEmail(usernameOrEmail: String) {
@@ -67,9 +69,9 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 val loginResponse: AuthResponse =
                     withContext(Dispatchers.IO) { _authApi.login(loginRequest) }
 
-                Log.d(
-                    "LoginViewModel",
-                    "Login successful for user: ${loginResponse.token} ${loginResponse.refreshToken}"
+                _authManager.saveTokens(
+                    accessToken = loginResponse.token.toString(),
+                    refreshToken = loginResponse.refreshToken.toString()
                 )
 
                 _uiState.update { it.copy(isLoading = false, loginSuccess = true) }

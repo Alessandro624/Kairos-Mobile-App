@@ -5,11 +5,20 @@ import android.content.SharedPreferences
 import android.util.Log
 import androidx.core.content.edit
 import it.unical.demacs.informatica.kairosapp.model.UserRole
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class AuthManager(context: Context) {
 
     private val sharedPreferences: SharedPreferences =
         context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+
+    private val _isLoggedIn = MutableStateFlow(isLoggedIn())
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
+    private val _isAdmin = MutableStateFlow(isAdmin())
+    val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
 
     companion object {
         private const val ACCESS_TOKEN_KEY = "access_token"
@@ -36,6 +45,9 @@ class AuthManager(context: Context) {
         Log.d("AuthManager", "Tokens and Role saved.")
         Log.d("AuthManager", "Access Token expires: ${java.util.Date(expirationTimeMillis)}")
         Log.d("AuthManager", "User Role: ${userRole ?: "N/A"}")
+
+        _isLoggedIn.value = isLoggedIn()
+        _isAdmin.value = isAdmin()
     }
 
     fun getAccessToken(): String? {
@@ -73,12 +85,16 @@ class AuthManager(context: Context) {
             remove(ROLE_KEY)
         }
         Log.d("AuthManager", "Token cleared.")
+
+        _isLoggedIn.value = isLoggedIn()
+        _isAdmin.value = isAdmin()
     }
 
     fun isLoggedIn(): Boolean {
         val accessToken = getAccessToken()
-        val expirationTime = getTokenExpirationTimeMillis()
-        val isTokenValid = accessToken != null && expirationTime > System.currentTimeMillis()
+        val expirationTime = TokenUtils.getTokenExpirationTimeMillis(accessToken.toString())
+        val isTokenValid =
+            accessToken != null && expirationTime > System.currentTimeMillis()
         Log.d(
             "AuthManager",
             "isLoggedIn: $isTokenValid (Token present: ${accessToken != null}, Expired: ${expirationTime <= System.currentTimeMillis()})"
@@ -88,7 +104,7 @@ class AuthManager(context: Context) {
 
     fun isAdmin(): Boolean {
         val userRole = getRole()
-        val isAdminUser = userRole == UserRole.ADMIN
+        val isAdminUser = userRole == UserRole.ADMIN.toString()
         Log.d("AuthManager", "isAdmin: $isAdminUser (User role: ${userRole ?: "N/A"})")
         return isAdminUser
     }

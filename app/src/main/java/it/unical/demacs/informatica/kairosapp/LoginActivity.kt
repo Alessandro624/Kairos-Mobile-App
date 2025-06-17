@@ -27,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,7 +54,6 @@ fun LoginActivity(
     onNavigateToRegistration: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
     onLoginSuccess: () -> Unit,
-    modifier: Modifier = Modifier,
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -75,142 +73,130 @@ fun LoginActivity(
             viewModel.resetLoginState()
         }
     }
-
-    Scaffold(
-        topBar = {
-            SimpleTopBarActivity(
-                title = stringResource(R.string.login),
-                onNavigateBack = { onLoginSuccess() }
-            )
-        },
-        modifier = modifier.fillMaxSize()
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Image(
-                    painter = painterResource(id = R.mipmap.ic_launcher_monochrome),
-                    contentDescription = stringResource(R.string.kairos_logo),
-                    modifier = Modifier.size(120.dp)
-                )
-                Text(
-                    text = stringResource(R.string.title),
-                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            Spacer(Modifier.height(32.dp))
-
+            Image(
+                painter = painterResource(id = R.mipmap.ic_launcher_monochrome),
+                contentDescription = stringResource(R.string.kairos_logo),
+                modifier = Modifier.size(120.dp)
+            )
             Text(
-                text = stringResource(R.string.login_welcome),
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                text = stringResource(R.string.title),
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
             )
-            Spacer(Modifier.height(24.dp))
+        }
+        Spacer(Modifier.height(32.dp))
 
-            OutlinedTextField(
-                value = uiState.usernameOrEmail,
-                onValueChange = viewModel::updateUsernameOrEmail,
-                label = { Text(stringResource(R.string.usernameOrEmail)) },
-                leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !uiState.isLoading
-            )
-            Spacer(Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.login_welcome),
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(24.dp))
 
-            OutlinedTextField(
-                value = uiState.password,
-                onValueChange = viewModel::updatePassword,
-                label = { Text(stringResource(R.string.password)) },
-                leadingIcon = {
-                    Icon(
-                        Icons.Default.Lock,
-                        contentDescription = null
+        OutlinedTextField(
+            value = uiState.usernameOrEmail,
+            onValueChange = viewModel::updateUsernameOrEmail,
+            label = { Text(stringResource(R.string.usernameOrEmail)) },
+            leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading
+        )
+        Spacer(Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = uiState.password,
+            onValueChange = viewModel::updatePassword,
+            label = { Text(stringResource(R.string.password)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = null
+                )
+            },
+            visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                val image = if (uiState.isPasswordVisible)
+                    Icons.Filled.Visibility
+                else Icons.Filled.VisibilityOff
+
+                val description =
+                    if (uiState.isPasswordVisible) stringResource(R.string.hide_password) else stringResource(
+                        R.string.show_password
                     )
-                },
-                visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                trailingIcon = {
-                    val image = if (uiState.isPasswordVisible)
-                        Icons.Filled.Visibility
-                    else Icons.Filled.VisibilityOff
 
-                    val description =
-                        if (uiState.isPasswordVisible) stringResource(R.string.hide_password) else stringResource(
-                            R.string.show_password
-                        )
-
-                    IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
-                        Icon(imageVector = image, contentDescription = description)
-                    }
-                },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !uiState.isLoading
-            )
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(R.string.forgot_password),
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier
-                    .align(Alignment.End)
-                    .clickable(onClick = onNavigateToForgotPassword)
-                    .padding(4.dp)
-            )
-            Spacer(Modifier.height(24.dp))
-
-            Button(
-                onClick = viewModel::login,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                enabled = !uiState.isLoading
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                } else {
-                    Text(stringResource(R.string.login))
+                IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
+                    Icon(imageVector = image, contentDescription = description)
                 }
-            }
-            Spacer(Modifier.height(16.dp))
+            },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading
+        )
+        Spacer(Modifier.height(8.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.no_account_yet),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+        Text(
+            text = stringResource(R.string.forgot_password),
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .align(Alignment.End)
+                .clickable(onClick = onNavigateToForgotPassword)
+                .padding(4.dp)
+        )
+        Spacer(Modifier.height(24.dp))
+
+        Button(
+            onClick = viewModel::login,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            enabled = !uiState.isLoading
+        ) {
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
                 )
-                Spacer(Modifier.width(4.dp))
-                Text(
-                    text = stringResource(R.string.register_now),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickable(onClick = onNavigateToRegistration)
-                )
+            } else {
+                Text(stringResource(R.string.login))
             }
+        }
+        Spacer(Modifier.height(16.dp))
+
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.no_account_yet),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = stringResource(R.string.register_now),
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.clickable(onClick = onNavigateToRegistration)
+            )
         }
     }
 }

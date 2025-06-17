@@ -40,4 +40,9 @@
     <string name="no_account_yet">Non hai un account?</string>
     <string name="register_now">Registrati ora</string>
     <string name="error_login_generic">Errore nell\'accesso. Riprova più tardi</string>
+    <string name="logout">Logout</string>
+    <string name="registration_title">Registrati</string>
+    <string name="forgot_password_title">Password Dimenticata</string>
+    <string name="profile_title">Profilo</string>
+    <string name="admin_panel_title">Admin</string>
 </resources>

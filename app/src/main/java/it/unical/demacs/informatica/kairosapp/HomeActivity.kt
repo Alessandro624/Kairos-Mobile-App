@@ -8,10 +8,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Login
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material3.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -42,9 +38,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeActivity(
-    onNavigateToLogin: () -> Unit,
-    onNavigateToAdmin: () -> Unit,
-    onNavigateToProfile: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel()
 ) {
@@ -52,202 +45,164 @@ fun HomeActivity(
     val lazyListState = rememberLazyListState()
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.mipmap.ic_launcher_monochrome),
-                            contentDescription = stringResource(R.string.kairos_logo),
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.title))
-                    }
-                },
-                actions = {
-                    IconButton(onClick = onNavigateToAdmin) {
-                        Icon(
-                            Icons.Default.AdminPanelSettings,
-                            contentDescription = stringResource(R.string.admin_panel)
-                        )
-                    }
-                    IconButton(onClick = onNavigateToProfile) {
-                        Icon(
-                            Icons.Default.AccountCircle,
-                            contentDescription = stringResource(R.string.user_profile)
-                        )
-                    }
-                    IconButton(onClick = onNavigateToLogin) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.Login,
-                            contentDescription = stringResource(R.string.login)
-                        )
-                    }
+    LazyColumn(
+        state = lazyListState,
+        modifier = modifier
+            .padding()
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primaryContainer)
+                    .padding(vertical = 32.dp, horizontal = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.welcome_message),
+                    style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.site_description),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(24.dp))
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            lazyListState.animateScrollToItem(index = 1)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(stringResource(R.string.explore_events))
                 }
-            )
+            }
+            Spacer(Modifier.height(16.dp))
         }
-    ) { innerPadding ->
-        LazyColumn(
-            state = lazyListState,
-            modifier = modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-        ) {
-            item {
+
+        item {
+            if (uiState.isLoading) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(vertical = 32.dp, horizontal = 16.dp),
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        text = stringResource(R.string.events_loading),
+                        modifier = Modifier.padding(top = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            } else if (uiState.errorMessage != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.welcome_message),
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        text = uiState.errorMessage!!,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
                     Spacer(Modifier.height(8.dp))
+                    Button(
+                        onClick = { viewModel.fetchEventsFromNetwork() },
+                        modifier = Modifier.fillMaxWidth(0.6f)
+                    ) {
+                        Text(stringResource(R.string.retry))
+                    }
+                }
+            } else if (uiState.events.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
-                        text = stringResource(R.string.site_description),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        text = stringResource(R.string.no_events_available),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(8.dp))
                     Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                lazyListState.animateScrollToItem(index = 1)
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        onClick = { viewModel.fetchEventsFromNetwork() },
+                        modifier = Modifier.fillMaxWidth(0.6f)
                     ) {
-                        Text(stringResource(R.string.explore_events))
+                        Text(stringResource(R.string.refresh))
                     }
                 }
-                Spacer(Modifier.height(16.dp))
             }
+            Spacer(Modifier.height(16.dp))
+        }
 
+        if (!uiState.isLoading && uiState.events.isNotEmpty()) {
             item {
-                if (uiState.isLoading) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        LinearProgressIndicator(
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        Text(
-                            text = stringResource(R.string.events_loading),
-                            modifier = Modifier.padding(top = 8.dp),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                } else if (uiState.errorMessage != null) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = uiState.errorMessage!!,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = { viewModel.fetchEventsFromNetwork() },
-                            modifier = Modifier.fillMaxWidth(0.6f)
-                        ) {
-                            Text(stringResource(R.string.retry))
-                        }
-                    }
-                } else if (uiState.events.isEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.no_events_available),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Button(
-                            onClick = { viewModel.fetchEventsFromNetwork() },
-                            modifier = Modifier.fillMaxWidth(0.6f)
-                        ) {
-                            Text(stringResource(R.string.refresh))
+                Text(
+                    text = stringResource(R.string.upcoming_events),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                )
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(uiState.events.sortedBy { it.dateTime }.take(10)) { event ->
+                        EventCard(event = event) {
+                            Log.d("HomeActivity", "Clicked on upcoming event: ${event.title}")
                         }
                     }
                 }
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(24.dp))
             }
 
-            if (!uiState.isLoading && uiState.events.isNotEmpty()) {
+            uiState.categorizedEvents.forEach { (category, eventsInCategory) ->
                 item {
-                    Text(
-                        text = stringResource(R.string.upcoming_events),
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
-                    )
-                    LazyRow(
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(uiState.events.sortedBy { it.dateTime }.take(10)) { event ->
-                            EventCard(event = event) {
-                                Log.d("HomeActivity", "Clicked on upcoming event: ${event.title}")
-                            }
-                        }
-                    }
-                    Spacer(Modifier.height(24.dp))
-                }
-
-                uiState.categorizedEvents.forEach { (category, eventsInCategory) ->
-                    item {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = category,
-                                style = MaterialTheme.typography.headlineSmall,
-                                modifier = Modifier.padding(
-                                    start = 16.dp,
-                                    end = 16.dp,
-                                    bottom = 8.dp
-                                )
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = category,
+                            style = MaterialTheme.typography.headlineSmall,
+                            modifier = Modifier.padding(
+                                start = 16.dp,
+                                end = 16.dp,
+                                bottom = 8.dp
                             )
-                            LazyRow(
-                                contentPadding = PaddingValues(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                items(eventsInCategory) { event ->
-                                    EventCard(event = event) {
-                                        Log.d(
-                                            "HomeActivity",
-                                            "Clicked on categorized event: ${event.title}"
-                                        )
-                                    }
+                        )
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(eventsInCategory) { event ->
+                                EventCard(event = event) {
+                                    Log.d(
+                                        "HomeActivity",
+                                        "Clicked on categorized event: ${event.title}"
+                                    )
                                 }
                             }
-                            Spacer(Modifier.height(24.dp))
                         }
+                        Spacer(Modifier.height(24.dp))
                     }
                 }
             }
@@ -379,11 +334,7 @@ fun EventCard(event: EventDTO, onDetailsClick: () -> Unit) {
 @Composable
 fun HomeActivityPreview() {
     KairosAppTheme {
-        HomeActivity(
-            onNavigateToLogin = {},
-            onNavigateToAdmin = {},
-            onNavigateToProfile = {}
-        )
+        HomeActivity()
     }
 }
 
