@@ -33,27 +33,24 @@ class AuthManager private constructor(private val context: Context) {
         private const val ACCESS_TOKEN_KEY = "access_token"
         private const val REFRESH_TOKEN_KEY = "refresh_token"
         private const val TOKEN_EXPIRATION_TIME_KEY = "token_expiration_time_millis"
-        private const val ROLE_KEY = "role"
         private const val REFRESH_BUFFER_MILLIS = 5 * 60 * 1000L // refresh 5 mains before exp
     }
 
     fun saveTokens(accessToken: String, refreshToken: String) {
         val expirationTimeMillis = TokenUtils.getTokenExpirationTimeMillis(accessToken)
 
-        val roles: List<TokenUtils.JwtRole> = TokenUtils.getTokenRoles(accessToken)
-
-        val userRole = roles.firstOrNull()?.authority
-
         sharedPreferences.edit {
             putString(ACCESS_TOKEN_KEY, accessToken)
             putString(REFRESH_TOKEN_KEY, refreshToken)
             putLong(TOKEN_EXPIRATION_TIME_KEY, expirationTimeMillis)
-            putString(ROLE_KEY, userRole)
         }
 
-        Log.d("AuthManager", "Tokens and Role saved.")
+        Log.d("AuthManager", "Tokens saved.")
         Log.d("AuthManager", "Access Token expires: ${java.util.Date(expirationTimeMillis)}")
-        Log.d("AuthManager", "User Role: ${userRole ?: "N/A"}")
+        Log.d(
+            "AuthManager",
+            "User Role: ${TokenUtils.getTokenRoles(accessToken).firstOrNull()?.authority ?: "N/A"}"
+        )
 
         _isLoggedIn.update { checkIsLoggedIn() }
         _isAdmin.update { checkIsAdmin() }
@@ -69,10 +66,6 @@ class AuthManager private constructor(private val context: Context) {
 
     fun getTokenExpirationTimeMillis(): Long {
         return sharedPreferences.getLong(TOKEN_EXPIRATION_TIME_KEY, 0L)
-    }
-
-    fun getRole(): String? {
-        return sharedPreferences.getString(ROLE_KEY, null)
     }
 
     fun getNextRefreshDelayMillis(): Long {
@@ -91,7 +84,6 @@ class AuthManager private constructor(private val context: Context) {
             remove(ACCESS_TOKEN_KEY)
             remove(REFRESH_TOKEN_KEY)
             remove(TOKEN_EXPIRATION_TIME_KEY)
-            remove(ROLE_KEY)
         }
         Log.d("AuthManager", "Token cleared.")
 
@@ -111,9 +103,15 @@ class AuthManager private constructor(private val context: Context) {
     }
 
     private fun checkIsAdmin(): Boolean {
-        val userRole = getRole()
-        val isAdminUser = userRole == UserRole.ADMIN.toString()
-        Log.d("AuthManager", "checkIsAdmin: $isAdminUser (User role: ${userRole ?: "N/A"})")
+        val accessToken = getAccessToken()
+        if (accessToken == null || !isLoggedIn()) return false
+
+        val roles = TokenUtils.getTokenRoles(accessToken)
+        val isAdminUser = roles.any { it.authority == UserRole.ADMIN.toString() }
+        Log.d(
+            "AuthManager",
+            "checkIsAdmin: $isAdminUser (User roles: ${roles.joinToString { it.authority }})"
+        )
         return isAdminUser
     }
 
