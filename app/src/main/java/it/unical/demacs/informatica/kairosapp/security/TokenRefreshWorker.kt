@@ -63,6 +63,7 @@ class TokenRefreshWorker(
     override suspend fun doWork(): Result {
         return withContext(Dispatchers.IO) {
             val refreshToken = _authManager.getRefreshToken()
+            val accessToken = _authManager.getAccessToken()
 
             if (refreshToken == null) {
                 Log.d("TokenRefreshWorker", "Refresh token not available.")
@@ -71,7 +72,7 @@ class TokenRefreshWorker(
             }
 
             try {
-                val refreshResponse: AuthResponse = _authApi.refresh(refreshToken)
+                val refreshResponse: AuthResponse = _authApi.refresh(refreshToken, accessToken)
 
                 _authManager.saveTokens(
                     accessToken = refreshResponse.token.toString(),

@@ -1,7 +1,6 @@
 package io.swagger.client.infrastructure
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -18,6 +17,7 @@ open class ApiClient(val baseUrl: String) {
         protected const val JsonMediaType = "application/json"
         protected const val FormDataMediaType = "multipart/form-data"
         protected const val XmlMediaType = "application/xml"
+        protected const val PlainTextMediaType = "text/plain"
 
         @JvmStatic
         val client: OkHttpClient = OkHttpClient()
@@ -58,6 +58,10 @@ open class ApiClient(val baseUrl: String) {
 
             mediaType == XmlMediaType -> TODO("xml not currently supported.")
 
+            mediaType == PlainTextMediaType -> content.toString().toRequestBody(
+                mediaType.toMediaTypeOrNull()
+            )
+
             // TODO: this should be extended with other serializers
             else -> TODO("requestBody currently only supports JSON body and File body.")
         }
@@ -97,7 +101,10 @@ open class ApiClient(val baseUrl: String) {
         }
 
         val url = urlBuilder.build()
-        val headers = requestConfig.headers + defaultHeaders
+        val headers = requestConfig.headers.toMutableMap()
+        defaultHeaders.forEach { (key, value) ->
+            if (!headers.containsKey(key)) headers[key] = value
+        }
 
         if (headers[ContentType] ?: "" == "") {
             throw kotlin.IllegalStateException("Missing Content-Type header. This is required.")
