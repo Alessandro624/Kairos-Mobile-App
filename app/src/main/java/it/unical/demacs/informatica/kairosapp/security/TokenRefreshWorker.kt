@@ -20,7 +20,7 @@ class TokenRefreshWorker(
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
 
-    private val _authManager = AuthManager(appContext)
+    private val _authManager = AuthManager.getInstance(appContext)
     private val _authApi = AuthenticationApi()
 
     companion object {

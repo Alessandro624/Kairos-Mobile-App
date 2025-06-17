@@ -30,7 +30,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _application = application
     private val _uiState = MutableStateFlow(LoginUiState())
     private val _authApi = AuthenticationApi()
-    private val _authManager = AuthManager(application)
+    private val _authManager = AuthManager.getInstance(application)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun updateUsernameOrEmail(usernameOrEmail: String) {

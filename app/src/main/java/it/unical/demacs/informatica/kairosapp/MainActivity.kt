@@ -10,8 +10,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
@@ -38,24 +41,23 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        _authManager = AuthManager(this)
+        _authManager = AuthManager.getInstance(this)
 
         setContent {
             KairosAppTheme {
                 val navController = rememberNavController()
                 val context = LocalContext.current
 
-                if (_authManager.isLoggedIn()) {
-                    val initialDelay = _authManager.getNextRefreshDelayMillis()
-                    if (initialDelay > 0) {
-                        TokenRefreshWorker.schedule(context, initialDelay)
-                    } else {
-                        Log.w(
-                            "MainActivity",
-                            "Token already expired or near expiration on app launch. Forcing re-login."
-                        )
-                        _authManager.clearTokens()
-                        TokenRefreshWorker.cancel(context)
+                LaunchedEffect(Unit) {
+                    if (_authManager.isLoggedIn()) {
+                        val delay = _authManager.getNextRefreshDelayMillis()
+                        if (delay > 0) {
+                            TokenRefreshWorker.schedule(context, delay)
+                        } else {
+                            Log.w("MainActivity", "Token near expiry. Forcing logout.")
+                            _authManager.clearTokens()
+                            TokenRefreshWorker.cancel(context)
+                        }
                     }
                 }
 
@@ -77,27 +79,26 @@ fun AppNavigationHost(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
-    val showBackButton = currentRoute != Routes.HOME && navController.previousBackStackEntry != null
-    val isLoggedInState by authManager.isLoggedIn.collectAsState()
-    val isAdminState by authManager.isAdmin.collectAsState()
+    val currentRoute by navController.currentRoute()
+    val isLoggedIn by authManager.isLoggedIn.collectAsState()
+    val isAdmin by authManager.isAdmin.collectAsState()
 
     Scaffold(
         modifier = modifier,
         topBar = {
             SimpleTopBarActivity(
                 currentRoute = currentRoute,
-                showBackButton = showBackButton,
-                isLoggedIn = isLoggedInState,
-                isAdmin = isAdminState,
+                showBackButton = currentRoute != Routes.HOME && navController.previousBackStackEntry != null,
+                isLoggedIn = isLoggedIn,
+                isAdmin = isAdmin,
                 onBackClick = { navController.popBackStack() },
-                onAdminClick = { navController.navigate(Routes.ADMIN) },
-                onProfileClick = { navController.navigate(Routes.PROFILE) },
-                onLoginClick = { navController.navigate(Routes.LOGIN) },
+                onAdminClick = { navController.navigateSingleTop(Routes.ADMIN, currentRoute) },
+                onProfileClick = { navController.navigateSingleTop(Routes.PROFILE, currentRoute) },
+                onLoginClick = { navController.navigateSingleTop(Routes.LOGIN, currentRoute) },
                 onLogoutClick = {
                     authManager.clearTokens()
                     TokenRefreshWorker.cancel(context)
+                    navController.navigateSingleTop(Routes.HOME, currentRoute)
                 }
             )
         }
@@ -107,27 +108,40 @@ fun AppNavigationHost(
             startDestination = Routes.HOME,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(Routes.HOME) {
-                HomeActivity(
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            composable(Routes.HOME) { HomeActivity(Modifier.fillMaxSize()) }
+
             composable(Routes.LOGIN) {
                 LoginActivity(
-                    onNavigateToRegistration = { navController.navigate(Routes.REGISTRATION) },
-                    onNavigateToForgotPassword = { navController.navigate(Routes.FORGOT_PASSWORD) },
+                    onNavigateToRegistration = {
+                        navController.navigateSingleTop(
+                            Routes.REGISTRATION,
+                            currentRoute
+                        )
+                    },
+                    onNavigateToForgotPassword = {
+                        navController.navigateSingleTop(
+                            Routes.FORGOT_PASSWORD,
+                            currentRoute
+                        )
+                    },
                     onLoginSuccess = {
+                        val delay = authManager.getNextRefreshDelayMillis()
+                        TokenRefreshWorker.schedule(context, delay)
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
                         }
-                        val initialDelay = authManager.getNextRefreshDelayMillis()
-                        TokenRefreshWorker.schedule(context, initialDelay)
                     }
                 )
             }
+
             composable(Routes.REGISTRATION) {
                 RegistrationActivity(
-                    onNavigateToLogin = { navController.navigate(Routes.LOGIN) },
+                    onNavigateToLogin = {
+                        navController.navigateSingleTop(
+                            Routes.LOGIN,
+                            currentRoute
+                        )
+                    },
                     onRegistrationSuccess = {
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(Routes.REGISTRATION) { inclusive = true }
@@ -135,37 +149,53 @@ fun AppNavigationHost(
                     }
                 )
             }
+
             composable(Routes.FORGOT_PASSWORD) {
                 ForgotPasswordActivity(
-                    onNavigateToLogin = { navController.navigate(Routes.LOGIN) }
+                    onNavigateToLogin = {
+                        navController.navigateSingleTop(
+                            Routes.LOGIN,
+                            currentRoute
+                        )
+                    }
                 )
             }
+
             composable(Routes.PROFILE) {
-                if (isLoggedInState) {
+                if (isLoggedIn) {
                     ProfileActivity()
                 } else {
-                    Log.w(
-                        "AppNavigationHost",
-                        "Attempted to access PROFILE route without login. Redirecting."
-                    )
+                    Log.w("Nav", "Unauthorized PROFILE access.")
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                        popUpTo(Routes.HOME) { inclusive = false }
                     }
                 }
             }
+
             composable(Routes.ADMIN) {
-                if (isLoggedInState && isAdminState) {
+                if (isLoggedIn && isAdmin) {
                     AdminActivity()
                 } else {
-                    Log.w(
-                        "AppNavigationHost",
-                        "Attempted to access ADMIN route without sufficient permissions. Redirecting."
-                    )
+                    Log.w("Nav", "Unauthorized ADMIN access.")
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.HOME) { inclusive = true }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun NavHostController.currentRoute(): State<String?> {
+    val navBackStackEntry by currentBackStackEntryAsState()
+    return rememberUpdatedState(navBackStackEntry?.destination?.route)
+}
+
+fun NavHostController.navigateSingleTop(route: String, currentRoute: String?) {
+    if (currentRoute != route) {
+        navigate(route) {
+            launchSingleTop = true
         }
     }
 }

@@ -42,28 +42,7 @@ fun SimpleTopBarActivity(
 ) {
     TopAppBar(
         modifier = modifier,
-        title = {
-            when (currentRoute) {
-                Routes.HOME -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Image(
-                            painter = painterResource(id = R.mipmap.ic_launcher_monochrome),
-                            contentDescription = stringResource(R.string.kairos_logo),
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.title))
-                    }
-                }
-
-                Routes.LOGIN -> Text(stringResource(R.string.login))
-                Routes.REGISTRATION -> Text(stringResource(R.string.registration_title))
-                Routes.FORGOT_PASSWORD -> Text(stringResource(R.string.forgot_password_title))
-                Routes.PROFILE -> Text(stringResource(R.string.profile_title))
-                Routes.ADMIN -> Text(stringResource(R.string.admin_panel_title))
-                else -> Text(stringResource(R.string.title))
-            }
-        },
+        title = { TopBarTitle(currentRoute) },
         navigationIcon = {
             if (showBackButton) {
                 IconButton(onClick = onBackClick) {
@@ -75,32 +54,33 @@ fun SimpleTopBarActivity(
             }
         },
         actions = {
-            if (isLoggedIn && isAdmin) {
-                IconButton(onClick = onAdminClick) {
-                    Icon(
-                        Icons.Default.AdminPanelSettings,
-                        contentDescription = stringResource(R.string.admin_panel)
-                    )
-                }
-            }
-
             if (isLoggedIn) {
-                IconButton(onClick = onProfileClick) {
-                    Icon(
-                        Icons.Default.AccountCircle,
-                        contentDescription = stringResource(R.string.user_profile)
-                    )
+                if (isAdmin && currentRoute != Routes.ADMIN) {
+                    IconButton(onClick = onAdminClick) {
+                        Icon(
+                            Icons.Default.AdminPanelSettings,
+                            contentDescription = stringResource(R.string.admin_panel)
+                        )
+                    }
                 }
-            }
 
-            if (isLoggedIn) {
+                if (currentRoute != Routes.PROFILE) {
+                    IconButton(onClick = onProfileClick) {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = stringResource(R.string.user_profile)
+                        )
+                    }
+                }
+
                 IconButton(onClick = onLogoutClick) {
                     Icon(
                         Icons.AutoMirrored.Filled.ExitToApp,
-                        contentDescription = stringResource(R.string.logout)
+                        contentDescription = stringResource(R.string.logout),
+                        tint = MaterialTheme.colorScheme.error
                     )
                 }
-            } else {
+            } else if (currentRoute != Routes.LOGIN && currentRoute != Routes.REGISTRATION && currentRoute != Routes.FORGOT_PASSWORD) {
                 IconButton(onClick = onLoginClick) {
                     Icon(
                         Icons.AutoMirrored.Filled.Login,
@@ -118,6 +98,28 @@ fun SimpleTopBarActivity(
     )
 }
 
+@Composable
+private fun TopBarTitle(currentRoute: String?) {
+    when (currentRoute) {
+        Routes.HOME -> Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(id = R.mipmap.ic_launcher_monochrome),
+                contentDescription = stringResource(R.string.kairos_logo),
+                modifier = Modifier.size(40.dp)
+            )
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.title))
+        }
+
+        Routes.LOGIN -> Text(stringResource(R.string.login))
+        Routes.REGISTRATION -> Text(stringResource(R.string.registration_title))
+        Routes.FORGOT_PASSWORD -> Text(stringResource(R.string.forgot_password_title))
+        Routes.PROFILE -> Text(stringResource(R.string.profile_title))
+        Routes.ADMIN -> Text(stringResource(R.string.admin_panel_title))
+        else -> Text(stringResource(R.string.title))
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun SimpleTopBarActivityPreviewLoggedInHome() {
@@ -125,7 +127,7 @@ fun SimpleTopBarActivityPreviewLoggedInHome() {
         currentRoute = Routes.HOME,
         showBackButton = false,
         isLoggedIn = true,
-        isAdmin = true,
+        isAdmin = false,
         onBackClick = {},
         onAdminClick = {},
         onProfileClick = {},
