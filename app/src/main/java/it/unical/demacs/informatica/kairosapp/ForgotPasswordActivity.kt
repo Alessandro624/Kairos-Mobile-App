@@ -14,8 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -100,7 +103,10 @@ fun ForgotPasswordActivity(
             label = { Text(stringResource(R.string.usernameOrEmail)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isError = uiState.errorMessage != null && uiState.usernameOrEmail.isNotBlank(),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !uiState.isLoading,
+            leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
+            singleLine = true
         )
 
         if (uiState.errorMessage != null && uiState.usernameOrEmail.isNotBlank()) {
