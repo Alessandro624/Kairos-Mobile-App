@@ -8,6 +8,7 @@ import java.util.regex.Pattern
 object UserValidator {
     private val USERNAME_ALLOWED_CHARS_REGEX = "^[a-zA-Z0-9._-]+$".toRegex()
     private val PASSWORD_SPECIAL_CHARS_REGEX = Pattern.compile(".*[@#$%^&+=!*()_\\-].*")
+    private val PHONE_NUMBER_REGEX = "^\\+?[0-9]+$".toRegex()
 
     fun validateFirstName(firstName: String, context: Context): String? {
         return when {
@@ -64,6 +65,24 @@ object UserValidator {
         }
     }
 
+    fun validatePhoneNumber(phoneNumber: String?, context: Context): String? {
+        if (phoneNumber.isNullOrBlank()) {
+            return null
+        }
+        val minLength = 10
+        val maxLength = 15
+        return when {
+            phoneNumber.length < minLength || phoneNumber.length > maxLength -> "${
+                context.getString(
+                    R.string.error_phone_number_length
+                )
+            } $minLength - $maxLength"
+
+            !phoneNumber.matches(PHONE_NUMBER_REGEX) -> context.getString(R.string.error_phone_number_invalid_chars)
+            else -> null
+        }
+    }
+
     fun validateRegistrationForm(
         firstName: String,
         lastName: String,
@@ -79,6 +98,52 @@ object UserValidator {
         errors["username"] = validateUsername(username, context)
         errors["email"] = validateEmail(email, context)
         errors["password"] = validatePassword(password, context)
+
+        return errors
+    }
+
+    fun validateUserProfileUpdate(
+        firstName: String,
+        lastName: String,
+        phoneNumber: String?,
+        context: Context
+    ): Map<String, String?> {
+        val errors = mutableMapOf<String, String?>()
+
+        errors["firstName"] = validateFirstName(firstName, context)
+        errors["lastName"] = validateLastName(lastName, context)
+        errors["phoneNumber"] = validatePhoneNumber(phoneNumber, context)
+
+        return errors
+    }
+
+    fun validatePasswordChange(
+        currentPassword: String,
+        newPassword: String,
+        confirmNewPassword: String,
+        context: Context
+    ): Map<String, String?> {
+        val errors = mutableMapOf<String, String?>()
+
+        if (currentPassword.isBlank()) {
+            errors["currentPassword"] = context.getString(R.string.error_empty_password)
+        } else {
+            errors["currentPassword"] = null
+        }
+
+        errors["newPassword"] = validatePassword(newPassword, context)
+
+        if (confirmNewPassword.isBlank()) {
+            errors["confirmNewPassword"] = context.getString(R.string.error_empty_confirm_password)
+        } else if (newPassword != confirmNewPassword) {
+            errors["confirmNewPassword"] = context.getString(R.string.error_passwords_do_not_match)
+        } else {
+            errors["confirmNewPassword"] = null
+        }
+
+        if (newPassword == currentPassword && newPassword.isNotBlank()) {
+            errors["newPassword"] = context.getString(R.string.error_new_password_same_as_old)
+        }
 
         return errors
     }

@@ -38,6 +38,7 @@ object Routes {
     const val REGISTRATION = "registration"
     const val FORGOT_PASSWORD = "forgot_password"
     const val PROFILE = "profile"
+    const val CHANGE_PASSWORD = "change_password"
     const val ADMIN = "admin"
 }
 
@@ -211,9 +212,28 @@ fun AppNavigationHost(
 
             composable(Routes.PROFILE) {
                 if (isLoggedIn) {
-                    ProfileActivity()
+                    ProfileActivity(
+                        onNavigateToChangePassword = {
+                            navController.navigateSingleTop(Routes.CHANGE_PASSWORD, currentRoute)
+                        }
+                    )
                 } else {
                     Log.w("Nav", "Unauthorized PROFILE access.")
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.HOME) { inclusive = false }
+                    }
+                }
+            }
+
+            composable(Routes.CHANGE_PASSWORD) {
+                if (isLoggedIn) {
+                    PasswordChangeActivity(
+                        onNavigateBack = {
+                            navController.popBackStack()
+                        }
+                    )
+                } else {
+                    Log.w("Nav", "Unauthorized CHANGE_PASSWORD access.")
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.HOME) { inclusive = false }
                     }

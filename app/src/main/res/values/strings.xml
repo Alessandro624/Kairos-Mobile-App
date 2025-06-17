@@ -9,7 +9,7 @@
     </string>
     <string name="site_description">La tua piattaforma per scoprire e partecipare ad eventi unici</string>
     <string name="explore_events">Esplora Eventi</string>
-    <string name="events_loading">Caricamento eventi...</string>
+    <string name="events_loading">Caricamento eventi…</string>
     <string name="retry">Riprova</string>
     <string name="upcoming_events">Eventi disponibili</string>
     <string name="kairos_logo">Logo Kairos</string>
@@ -87,4 +87,30 @@
     <string name="error_please_fill_all_fields_correctly">Compila tutti i campi correttamente</string>
     <string name="next_step">Avanti</string>
     <string name="registration_step_account_info">Quasi fatto! Scegli le tue credenziali</string>
+    <string name="error_user_not_logged_in">Non hai effettuato l\'accesso</string>
+    <string name="error_fetch_profile_generic_client">Errore nel caricamento del profilo</string>
+    <string name="error_fetch_profile_api_failure">Errore. Riprova più tardi</string>
+    <string name="error_user_id_missing">Impossibile modificare i valori</string>
+    <string name="error_please_correct_fields">Per favore, ricontrolla i campi</string>
+    <string name="error_update_profile_generic_client">Impossibile aggiornare il profilo</string>
+    <string name="error_update_profile_api_failure">Errore nell\'aggiornamento. Riprova più tardi</string>
+    <string name="error_phone_number_length">Il numero di telefono deve essere compreso tra:</string>
+    <string name="error_phone_number_invalid_chars">Numero di telefono non valido</string>
+    <string name="error_new_password_same_as_old">La nuova password è identica alla vecchia</string>
+    <string name="profile_update_success">Informazioni modificate con successo</string>
+    <string name="loading_profile_data">Caricamento dati…</string>
+    <string name="phone_number_optional">Numero di telefono</string>
+    <string name="save">Salva</string>
+    <string name="cancel">Annulla</string>
+    <string name="edit_profile">Modifica</string>
+    <string name="change_password_button">Modifica la password</string>
+    <string name="error_password_change_failure">Errore nella modifica della password</string>
+    <string name="password_change_failure">Password non modificata. Riprova</string>
+    <string name="password_change_success">Password modificata con successo</string>
+    <string name="current_password">Vecchia password</string>
+    <string name="new_password">Nuova password</string>
+    <string name="confirm_new_password">Conferma password</string>
+    <string name="profile_picture">Immagine profilo</string>
+    <string name="default_profile_picture">Placeholder immagine profilo</string>
+    <string name="change_password_title">Cambia Password</string>
 </resources>

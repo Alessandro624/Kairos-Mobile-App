@@ -115,6 +115,7 @@ private fun TopBarTitle(currentRoute: String?) {
         Routes.REGISTRATION -> Text(stringResource(R.string.registration_title))
         Routes.FORGOT_PASSWORD -> Text(stringResource(R.string.forgot_password_title))
         Routes.PROFILE -> Text(stringResource(R.string.profile_title))
+        Routes.CHANGE_PASSWORD -> Text(stringResource(R.string.change_password_title))
         Routes.ADMIN -> Text(stringResource(R.string.admin_panel_title))
         else -> Text(stringResource(R.string.title))
     }
