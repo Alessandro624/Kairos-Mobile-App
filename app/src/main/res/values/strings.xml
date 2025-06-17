@@ -45,4 +45,10 @@
     <string name="forgot_password_title">Password Dimenticata</string>
     <string name="profile_title">Profilo</string>
     <string name="admin_panel_title">Admin</string>
+    <string name="message_password_reset_success">Email di reset inviata con successo</string>
+    <string name="error_password_reset_generic">Impossibile inviare l\'email di reset. Riprova più tardi</string>
+    <string name="forgot_password_instructions">Inserisci il tuo username o l\'indirizzo email per ricevere le istruzioni di recupero</string>
+    <string name="send_reset_link">Invia istruzioni</string>
+    <string name="back_to_login">Accedi ora</string>
+    <string name="remember_password">Ricordi la password?</string>
 </resources>

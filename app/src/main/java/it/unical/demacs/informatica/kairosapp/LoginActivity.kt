@@ -73,6 +73,7 @@ fun LoginActivity(
             viewModel.resetLoginState()
         }
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

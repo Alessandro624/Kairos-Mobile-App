@@ -98,9 +98,6 @@ fun AppNavigationHost(
                 onLogoutClick = {
                     authManager.clearTokens()
                     TokenRefreshWorker.cancel(context)
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(0) { inclusive = true }
-                    }
                 }
             )
         }
