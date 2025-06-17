@@ -79,7 +79,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             } catch (e: Exception) {
                 Log.e("LoginViewModel", "Login failed: ${e.message}", e)
                 val errorMessage = when (e) {
-                    is io.swagger.client.infrastructure.ClientException -> {
+                    is io.swagger.client.infrastructure.ServerException -> {
                         _application.getString(R.string.error_invalid_credentials)
                     }
 

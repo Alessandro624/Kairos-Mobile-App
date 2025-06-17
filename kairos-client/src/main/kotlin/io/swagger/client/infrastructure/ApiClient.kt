@@ -23,36 +23,50 @@ open class ApiClient(val baseUrl: String) {
         val client: OkHttpClient = OkHttpClient()
 
         @JvmStatic
-        var defaultHeaders: Map<String, String> by ApplicationDelegates.setOnce(mapOf(ContentType to JsonMediaType, Accept to JsonMediaType))
+        var defaultHeaders: Map<String, String> by ApplicationDelegates.setOnce(
+            mapOf(
+                ContentType to JsonMediaType,
+                Accept to JsonMediaType
+            )
+        )
 
         @JvmStatic
-        val jsonHeaders: Map<String, String> = mapOf(ContentType to JsonMediaType, Accept to JsonMediaType)
+        val jsonHeaders: Map<String, String> =
+            mapOf(ContentType to JsonMediaType, Accept to JsonMediaType)
     }
 
     @androidx.annotation.RequiresApi(Build.VERSION_CODES.N)
-    protected inline fun <reified T> requestBody(content: T, mediaType: String = JsonMediaType): RequestBody =
-            when {
-                content is File -> content.asRequestBody(mediaType.toMediaTypeOrNull())
+    protected inline fun <reified T> requestBody(
+        content: T,
+        mediaType: String = JsonMediaType
+    ): RequestBody =
+        when {
+            content is File -> content.asRequestBody(mediaType.toMediaTypeOrNull())
 
-                mediaType == FormDataMediaType -> {
-                    var builder = FormBody.Builder()
-                    // content's type *must* be Map<String, Any>
-                    @Suppress("UNCHECKED_CAST")
-                    (content as Map<String, String>).forEach { (key, value) ->
-                        builder = builder.add(key, value)
-                    }
-                    builder.build()
+            mediaType == FormDataMediaType -> {
+                var builder = FormBody.Builder()
+                // content's type *must* be Map<String, Any>
+                @Suppress("UNCHECKED_CAST")
+                (content as Map<String, String>).forEach { (key, value) ->
+                    builder = builder.add(key, value)
                 }
-                mediaType == JsonMediaType -> Serializer.moshi.adapter(T::class.java).toJson(content)
-                    .toRequestBody(mediaType.toMediaTypeOrNull())
-                mediaType == XmlMediaType -> TODO("xml not currently supported.")
-
-                // TODO: this should be extended with other serializers
-                else -> TODO("requestBody currently only supports JSON body and File body.")
+                builder.build()
             }
 
-    protected inline fun <reified T : Any?> responseBody(body: ResponseBody?, mediaType: String = JsonMediaType): T? {
-        if (body == null || body.contentLength() <= 0) return null
+            mediaType == JsonMediaType -> Serializer.moshi.adapter(T::class.java).toJson(content)
+                .toRequestBody(mediaType.toMediaTypeOrNull())
+
+            mediaType == XmlMediaType -> TODO("xml not currently supported.")
+
+            // TODO: this should be extended with other serializers
+            else -> TODO("requestBody currently only supports JSON body and File body.")
+        }
+
+    protected inline fun <reified T : Any?> responseBody(
+        body: ResponseBody?,
+        mediaType: String = JsonMediaType
+    ): T? {
+        if (body == null) return null
         return when (mediaType) {
             JsonMediaType -> Serializer.moshi.adapter(T::class.java).fromJson(body.source())
             else -> TODO()
@@ -60,11 +74,15 @@ open class ApiClient(val baseUrl: String) {
     }
 
     @RequiresApi(Build.VERSION_CODES.GINGERBREAD)
-    protected inline fun <reified T : Any?> request(requestConfig: RequestConfig, body: Any? = null): ApiInfrastructureResponse<T?> {
-        val httpUrl = baseUrl.toHttpUrlOrNull() ?: throw IllegalStateException("baseUrl is invalid.")
+    protected inline fun <reified T : Any?> request(
+        requestConfig: RequestConfig,
+        body: Any? = null
+    ): ApiInfrastructureResponse<T?> {
+        val httpUrl =
+            baseUrl.toHttpUrlOrNull() ?: throw IllegalStateException("baseUrl is invalid.")
 
         var urlBuilder = httpUrl.newBuilder()
-                .addPathSegments(requestConfig.path.trimStart('/'))
+            .addPathSegments(requestConfig.path.trimStart('/'))
 
         requestConfig.query.forEach { query ->
             query.value.forEach { queryValue ->
@@ -98,7 +116,9 @@ open class ApiClient(val baseUrl: String) {
             RequestMethod.OPTIONS -> Request.Builder().url(url).method("OPTIONS", null)
         }
 
-        headers.forEach { header -> request = request.addHeader(header.key, header.value.toString()) }
+        headers.forEach { header ->
+            request = request.addHeader(header.key, header.value.toString())
+        }
 
         val realRequest = request.build()
         val response = client.newCall(realRequest).execute()
@@ -106,29 +126,33 @@ open class ApiClient(val baseUrl: String) {
         // TODO: handle specific mapping types. e.g. Map<int, Class<?>>
         when {
             response.isRedirect -> return Redirection(
-                    response.code,
-                    response.headers.toMultimap()
+                response.code,
+                response.headers.toMultimap()
             )
+
             response.isInformational -> return Informational(
-                    response.message,
-                    response.code,
-                    response.headers.toMultimap()
+                response.message,
+                response.code,
+                response.headers.toMultimap()
             )
+
             response.isSuccessful -> return Success(
-                    responseBody(response.body, accept),
-                    response.code,
-                    response.headers.toMultimap()
+                responseBody(response.body, accept),
+                response.code,
+                response.headers.toMultimap()
             )
+
             response.isClientError -> return ClientError(
-                    response.body?.string(),
-                    response.code,
-                    response.headers.toMultimap()
+                response.body?.string(),
+                response.code,
+                response.headers.toMultimap()
             )
+
             else -> return ServerError(
-                    null,
-                    response.body?.string(),
-                    response.code,
-                    response.headers.toMultimap()
+                null,
+                response.body?.string(),
+                response.code,
+                response.headers.toMultimap()
             )
         }
     }
