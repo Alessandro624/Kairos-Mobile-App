@@ -21,6 +21,9 @@ class AuthManager private constructor(private val context: Context) {
     private val _isAdmin = MutableStateFlow(checkIsAdmin())
     val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
 
+    private val _currentUsername = MutableStateFlow<String?>(checkUsername())
+    val currentUsername: StateFlow<String?> = _currentUsername.asStateFlow()
+
     companion object {
         @Volatile
         private var instance: AuthManager? = null
@@ -54,6 +57,7 @@ class AuthManager private constructor(private val context: Context) {
 
         _isLoggedIn.update { checkIsLoggedIn() }
         _isAdmin.update { checkIsAdmin() }
+        _currentUsername.update { checkUsername() }
     }
 
     fun getAccessToken(): String? {
@@ -89,6 +93,7 @@ class AuthManager private constructor(private val context: Context) {
 
         _isLoggedIn.update { checkIsLoggedIn() }
         _isAdmin.update { checkIsAdmin() }
+        _currentUsername.update { checkUsername() }
     }
 
     private fun checkIsLoggedIn(): Boolean {
@@ -115,11 +120,23 @@ class AuthManager private constructor(private val context: Context) {
         return isAdminUser
     }
 
+    private fun checkUsername(): String? {
+        if (isLoggedIn()) {
+            val accessToken = getAccessToken()
+            return TokenUtils.getUsername(accessToken.toString())
+        }
+        return null
+    }
+
     fun isLoggedIn(): Boolean {
         return _isLoggedIn.value
     }
 
     fun isAdmin(): Boolean {
         return _isAdmin.value
+    }
+
+    fun getCurrentUsername(): String? {
+        return _currentUsername.value
     }
 }

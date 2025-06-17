@@ -18,6 +18,7 @@ import io.swagger.client.models.UserPasswordUpdateDTO
 import io.swagger.client.models.UserUpdateDTO
 
 import io.swagger.client.infrastructure.*
+import io.swagger.client.models.UserPage
 
 class UsersApi(basePath: kotlin.String = "http://10.0.2.2:8080") : ApiClient(basePath) {
 
@@ -101,7 +102,7 @@ class UsersApi(basePath: kotlin.String = "http://10.0.2.2:8080") : ApiClient(bas
         size: kotlin.Any? = null,
         sortBy: kotlin.Any? = null,
         direction: kotlin.Any? = null, authorization: kotlin.String?
-    ): Page {
+    ): UserPage {
         val localVariableHeaders: MutableMap<String, String> = mutableMapOf()
         authorization?.apply { localVariableHeaders["Authorization"] = "Bearer $this" }
         val localVariableQuery: MultiValueMap =
@@ -124,12 +125,12 @@ class UsersApi(basePath: kotlin.String = "http://10.0.2.2:8080") : ApiClient(bas
             "/v1/users", query = localVariableQuery,
             headers = localVariableHeaders
         )
-        val response = request<Page>(
+        val response = request<UserPage>(
             localVariableConfig
         )
 
         return when (response.responseType) {
-            ResponseType.Success -> (response as Success<*>).data as Page
+            ResponseType.Success -> (response as Success<*>).data as UserPage
             ResponseType.Informational -> TODO()
             ResponseType.Redirection -> TODO()
             ResponseType.ClientError -> throw ClientException(

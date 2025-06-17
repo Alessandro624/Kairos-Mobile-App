@@ -48,4 +48,14 @@ object TokenUtils {
         }
         return roleList
     }
+
+    fun getUsername(token: String): String? {
+        try {
+            val decodedToken = decodeToken(token)
+            return decodedToken.optString("sub")
+        } catch (e: Exception) {
+            Log.e("TokenUtils", "Error parsing token username: ${e.message}", e)
+        }
+        return null
+    }
 }
