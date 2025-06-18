@@ -16,11 +16,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Refresh
@@ -29,6 +33,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,6 +44,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,9 +60,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import io.swagger.client.models.UserDTO
+import it.unical.demacs.informatica.kairosapp.model.UserRole
 import it.unical.demacs.informatica.kairosapp.ui.theme.KairosAppTheme
 import it.unical.demacs.informatica.kairosapp.viewmodels.AdminViewModel
-import it.unical.demacs.informatica.kairosapp.model.UserRole // Import the UserRole enum
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -184,6 +192,27 @@ fun AdminActivity(viewModel: AdminViewModel = viewModel()) {
                     )
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.items_per_page_label),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(Modifier.width(8.dp))
+                PageSizeDropdown(
+                    selectedSize = uiState.pageSize,
+                    onSizeSelected = { viewModel.setPageSize(it) },
+                    enabled = !uiState.isLoading
+                )
+            }
+
             Spacer(Modifier.height(16.dp))
 
             Row(
@@ -196,14 +225,27 @@ fun AdminActivity(viewModel: AdminViewModel = viewModel()) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onBackground
                 )
+
                 Spacer(Modifier.width(8.dp))
-                Button(onClick = { /* TODO: Implement sorting options via DropdownMenu or similar */ }) {
-                    Text(
-                        stringResource(
-                            R.string.sort_by_current,
-                            uiState.sortBy,
-                            uiState.sortDirection
-                        )
+
+                SortByFieldDropdown(
+                    currentSortBy = uiState.sortBy,
+                    onSortBySelected = { newSortBy -> viewModel.setSortBy(newSortBy) },
+                    enabled = !uiState.isLoading
+                )
+                Spacer(Modifier.width(8.dp))
+                IconButton(
+                    onClick = viewModel::toggleSortDirection,
+                    enabled = !uiState.isLoading
+                ) {
+                    val iconVector =
+                        if (uiState.sortDirection == "ASC") Icons.Default.ArrowUpward else Icons.Default.ArrowDownward
+                    val description =
+                        if (uiState.sortDirection == "ASC") R.string.sort_direction_asc else R.string.sort_direction_desc
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = stringResource(description),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -364,11 +406,29 @@ fun UserCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = user.role,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(
+                    modifier = Modifier
+                        .padding(top = 4.dp)
+                        .clip(AbsoluteRoundedCornerShape(4.dp))
+                        .background(
+                            when (user.role.uppercase()) {
+                                "ADMIN" -> MaterialTheme.colorScheme.errorContainer
+                                "ORGANIZER" -> MaterialTheme.colorScheme.tertiaryContainer
+                                else -> MaterialTheme.colorScheme.secondaryContainer
+                            }
+                        )
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = user.role,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = when (user.role.uppercase()) {
+                            "ADMIN" -> MaterialTheme.colorScheme.onErrorContainer
+                            "ORGANIZER" -> MaterialTheme.colorScheme.onTertiaryContainer
+                            else -> MaterialTheme.colorScheme.onSecondaryContainer
+                        }
+                    )
+                }
             }
 
             Row {
@@ -392,6 +452,75 @@ fun UserCard(
                         tint = if (isCurrentUser) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f) else MaterialTheme.colorScheme.error
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun PageSizeDropdown(selectedSize: Int, onSizeSelected: (Int) -> Unit, enabled: Boolean) {
+    val items = listOf(5, 10, 20, 30)
+    val expanded = remember { mutableStateOf(false) }
+
+    Column {
+        Button(onClick = { expanded.value = true }, enabled = enabled) {
+            Text("$selectedSize")
+            Icon(
+                Icons.Default.ArrowDropDown,
+                contentDescription = stringResource(R.string.show_page_size_options)
+            )
+        }
+        DropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false }
+        ) {
+            items.forEach { size ->
+                DropdownMenuItem(
+                    text = { Text(size.toString()) },
+                    onClick = {
+                        onSizeSelected(size)
+                        expanded.value = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun SortByFieldDropdown(
+    currentSortBy: String,
+    onSortBySelected: (String) -> Unit,
+    enabled: Boolean
+) {
+    val sortOptions = mapOf(
+        "username" to stringResource(R.string.username),
+        "firstName" to stringResource(R.string.first_name),
+        "lastName" to stringResource(R.string.last_name),
+        "email" to stringResource(R.string.email)
+    )
+    val expanded = remember { mutableStateOf(false) }
+
+    Column {
+        Button(onClick = { expanded.value = true }, enabled = enabled) {
+            Text(sortOptions[currentSortBy] ?: currentSortBy)
+            Icon(
+                Icons.Default.ArrowDropDown,
+                contentDescription = stringResource(R.string.show_sort_options)
+            )
+        }
+        DropdownMenu(
+            expanded = expanded.value,
+            onDismissRequest = { expanded.value = false }
+        ) {
+            sortOptions.forEach { (sortByValue, sortByLabel) ->
+                DropdownMenuItem(
+                    text = { Text(sortByLabel) },
+                    onClick = {
+                        onSortBySelected(sortByValue)
+                        expanded.value = false
+                    }
+                )
             }
         }
     }

@@ -144,4 +144,10 @@
     <string name="error_cannot_change_own_role">Non è possibile modificare il proprio ruolo</string>
     <string name="error_no_user_to_update">Nessun utente selezionato</string>
     <string name="error_role_already_set">Ruolo già impostato</string>
+    <string name="items_per_page">Utenti per pagina</string>
+    <string name="items_per_page_label">Elementi per pagina:</string>
+    <string name="show_page_size_options">Opzioni:</string>
+    <string name="sort_direction_asc">Acendente</string>
+    <string name="sort_direction_desc">Discendente</string>
+    <string name="show_sort_options">Mostra opzioni</string>
 </resources>
