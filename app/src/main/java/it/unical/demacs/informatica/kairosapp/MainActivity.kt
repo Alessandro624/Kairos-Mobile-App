@@ -145,9 +145,9 @@ fun AppNavigationHost(
                 onProfileClick = { navController.navigateSingleTop(Routes.PROFILE, currentRoute) },
                 onLoginClick = { navController.navigateSingleTop(Routes.LOGIN, currentRoute) },
                 onLogoutClick = {
+                    navController.navigateSingleTop(Routes.HOME, currentRoute)
                     authManager.clearTokens()
                     TokenRefreshWorker.cancel(context)
-                    navController.navigateSingleTop(Routes.HOME, currentRoute)
                 }
             )
         }
@@ -217,11 +217,6 @@ fun AppNavigationHost(
                             navController.navigateSingleTop(Routes.CHANGE_PASSWORD, currentRoute)
                         }
                     )
-                } else {
-                    Log.w("Nav", "Unauthorized PROFILE access.")
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = false }
-                    }
                 }
             }
 
@@ -232,22 +227,12 @@ fun AppNavigationHost(
                             navController.popBackStack()
                         }
                     )
-                } else {
-                    Log.w("Nav", "Unauthorized CHANGE_PASSWORD access.")
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.HOME) { inclusive = false }
-                    }
                 }
             }
 
             composable(Routes.ADMIN) {
                 if (isLoggedIn && isAdmin) {
                     AdminActivity()
-                } else {
-                    Log.w("Nav", "Unauthorized ADMIN access.")
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = true }
-                    }
                 }
             }
         }
